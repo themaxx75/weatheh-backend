@@ -1,0 +1,7 @@
+requests
+sqlalchemy
+pytz
+flask
+lxml
+redis
+gunicorn
