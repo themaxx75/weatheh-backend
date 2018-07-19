@@ -3,7 +3,7 @@ import unicodedata
 import sqlalchemy as sa
 from sqlalchemy import orm
 
-from weatheh import app, database, weather
+from weatheh import app, database, utils
 
 
 class Station(database.Base):
@@ -19,7 +19,7 @@ class Station(database.Base):
     latitude = sa.Column(sa.Float, nullable=False, unique=False)
 
     def distance_from(self, latitude, longitude):
-        return weather.distance(
+        return utils.distance(
             [latitude, longitude], [self.latitude, self.longitude]
         )
 
@@ -103,7 +103,7 @@ class City(database.Base):
         return self.name_fr
 
     def distance_from(self, latitude, longitude):
-        return weather.distance(
+        return utils.distance(
             [latitude, longitude], [self.latitude, self.longitude]
         )
 
@@ -118,10 +118,9 @@ class City(database.Base):
             cached = app.cache.get(cache_key)
 
             if cached:
-                print("current_condition cached!")
                 return cached
 
-        result = weather.current_conditions(self, language)
+        result = utils.current_conditions(self, language)
 
         if caching:
             app.cache.set(cache_key, result, 120)
