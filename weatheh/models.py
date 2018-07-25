@@ -3,7 +3,7 @@ import unicodedata
 import sqlalchemy as sa
 from sqlalchemy import orm
 
-from weatheh import app, database, utils
+from . import database, utils, api
 
 
 class Station(database.Base):
@@ -111,11 +111,11 @@ class City(database.Base):
         """Returns the province/territory's full name for a given language."""
         return self.provinces[self.province][language]
 
-    def current_condition(self, language="en", caching=True):
+    def current_condition(self, language="en", caching=False):
         cache_key = f"City.{self.id}.{language}"
 
         if caching:
-            cached = app.cache.get(cache_key)
+            cached = api.cache.get(cache_key)
 
             if cached:
                 return cached
@@ -123,7 +123,7 @@ class City(database.Base):
         result = utils.current_conditions(self, language)
 
         if caching:
-            app.cache.set(cache_key, result, 120)
+            api.cache.set(cache_key, result, 120)
 
         return result
 
@@ -136,6 +136,7 @@ class City(database.Base):
             },
             "nameEn": self.name_en,
             "nameFr": self.name_fr,
+            "id": self.id
         }
 
     def __repr__(self):

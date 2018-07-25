@@ -7,14 +7,12 @@ import requests
 import json
 import os
 
-from weatheh import app, models
+from . import api, models
 
 BASE_HOST_DD_WEATHER = "http://dd.weather.gc.ca"
 WEATHER_URL = BASE_HOST_DD_WEATHER + "/citypage_weather/xml/{}/{}_{}.xml"
 
-icons_codes_path = os.path.join(
-    os.path.dirname(__file__), "icons_codes.json"
-)
+icons_codes_path = os.path.join(os.path.dirname(__file__), "icons_codes.json")
 with open(icons_codes_path) as f:
     WEATHER_ICONS = json.load(f)
 
@@ -156,7 +154,9 @@ def find_nearest(lat, lon, results):
     return near[1]
 
 
-def find_nearest_city_from_location(lat, lon, radius=1.5, caching=True):
+def find_nearest_city_from_location(
+    lat, lon, radius=1.5, caching=False
+):
     """
     Finds a list of stations based on a given lat lon, and finds the nearest
     city served by the found station.
@@ -164,7 +164,7 @@ def find_nearest_city_from_location(lat, lon, radius=1.5, caching=True):
     cache_key = f"nearest_city_from_location.{lat}{lon}"
 
     if caching:
-        cached = app.cache.get(cache_key)
+        cached = api.cache.get(cache_key)
         if cached:
             return cached
 
@@ -181,7 +181,7 @@ def find_nearest_city_from_location(lat, lon, radius=1.5, caching=True):
     city = find_nearest(lat, lon, station.cities)
 
     if caching:
-        app.cache.set(cache_key, city, 60 * 60)
+        api.cache.set(cache_key, city, 60 * 60)
     return city
 
 
@@ -220,17 +220,18 @@ def forecast_xml_parser(raw_xml):
     )
     if current_icon_code:
         parsed["current"]["iconClass"] = WEATHER_ICONS.get(
-            current_icon_code, {}).get("name", 'we-na')
+            current_icon_code, {}
+        ).get("name", "we-na")
     else:
-        parsed["current"]["iconClass"] = 'we-na'
+        parsed["current"]["iconClass"] = "we-na"
 
     parsed["current"]["iconCode"] = to_int(current_icon_code)
 
     current_temperature = getattr(
         root.find("currentConditions/temperature"), "text", None
     )
-    parsed["current"]["temperature"] = to_float(current_temperature)
-    parsed["current"]["temperatureDisplay"] = to_float(
+    parsed["current"]["temperatureFloat"] = to_float(current_temperature)
+    parsed["current"]["temperature"] = to_float(
         current_temperature, rounding=0
     )
 
@@ -238,6 +239,7 @@ def forecast_xml_parser(raw_xml):
         root.find("currentConditions/condition"), "text", None
     )
     parsed["current"]["description"] = current_description
+    parsed["current"]["forecastPeriod"] = parsed["current"]["description"]
 
     current_dew_point = getattr(
         root.find("currentConditions/dewpoint"), "text", None
@@ -323,10 +325,11 @@ def forecast_xml_parser(raw_xml):
         )
         forecast_dict["iconCode"] = to_int(icon_code)
         if icon_code:
-            forecast_dict["iconClass"] = WEATHER_ICONS.get(
-                icon_code, {}).get("name", 'we-na')
+            forecast_dict["iconClass"] = WEATHER_ICONS.get(icon_code, {}).get(
+                "name", "we-na"
+            )
         else:
-            forecast_dict["iconClass"] = 'we-na'
+            forecast_dict["iconClass"] = "we-na"
 
         temperature = getattr(
             forecast.find("temperatures/temperature"), "text", None
@@ -344,6 +347,11 @@ def forecast_xml_parser(raw_xml):
         forecast_dict["precipitationSummary"] = precipitation_summary
 
         parsed["foreCast"].append(forecast_dict)
+
+    current_forecast = {**parsed["current"]}
+    current_forecast["cloudPrecipitation"] = current_forecast["description"]
+    current_forecast["forecastPeriod"] = "Now"
+    # parsed["foreCast"] = [current_forecast] + parsed["foreCast"]
 
     for hourly in root.findall("hourlyForecastGroup/hourlyForecast"):
         hourly_dict = {}

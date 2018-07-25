@@ -1,6 +1,6 @@
-from weatheh import app
+from weatheh import api
 
-application = app.app
+application = api.app
 
 if __name__ == "__main__":
-    app.app.run()
+    api.app.run()

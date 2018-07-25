@@ -1,7 +1,7 @@
 from flask import abort, Flask, jsonify, request, make_response
 from werkzeug.contrib.cache import RedisCache
 from sqlalchemy.orm.exc import NoResultFound
-from weatheh import database, models, utils
+from . import database, models, utils
 import requests
 
 from flask_cors import CORS
@@ -9,9 +9,11 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 cache = RedisCache()
+debug = app.debug
 
-if app.debug:
+if debug:
     CORS(app)
+
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
@@ -57,3 +59,15 @@ def from_city(city_code):
     forecast["city"] = city.to_dict()
 
     return jsonify(forecast)
+
+
+@app.route("/api/forecast/search/<search>")
+def search_city(search):
+    language = request.args.get("lang", "en")
+    results = (
+        models.City.query.filter(models.City.name_en_unaccented.ilike("{}%".format(search)))
+        .order_by(models.City.name_en_unaccented)
+        .limit(5)
+    )
+
+    return jsonify([c.to_dict() for c in results])
