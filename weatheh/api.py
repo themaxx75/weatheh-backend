@@ -98,7 +98,12 @@ def search_city(search):
             .limit(5)
         )
 
-    results = [c.to_dict(language) for c in search_results]
+    # results = [c.to_dict(language) for c in search_results]
+    results = []
+    for city in search_results:
+        city_dict = city.to_dict(language)
+        if city_dict.get("condition"):
+            results.append(city_dict)
     cache.set(cache_key, results, search_cache_duration)
 
     return jsonify(results)

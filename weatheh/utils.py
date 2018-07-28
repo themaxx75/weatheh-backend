@@ -134,6 +134,8 @@ def _current_conditions(city, language="en"):
 def current_conditions(city, language="en"):
     url = WEATHER_URL.format(city.province, city.code, language[0])
     r = requests.get(url)
+    if not r.ok:
+        return {}
     return forecast_xml_parser(r.content)
 
 
@@ -188,7 +190,11 @@ def find_nearest_city_from_location(
 def forecast_xml_parser(raw_xml):
     timestamp_format = "%Y%m%d%H%M%S"
     parsed = {"current": {}, "foreCast": [], "hourly": [], "station": {}}
-    root = etree.fromstring(raw_xml)
+    try:
+        root = etree.fromstring(raw_xml)
+    except Exception:
+        print(raw_xml)
+        raise
 
     observation_datetime_utc = None
     utc_offset = 0
