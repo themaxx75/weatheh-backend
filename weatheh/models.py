@@ -136,7 +136,8 @@ class City(database.Base):
             },
             "id": self.id,
             "station": {},
-            "condition": condition.get("current")
+            "condition": condition.get("current"),
+            "region": condition["station"]["region"]
         }
 
         if language == 'en':
