@@ -127,17 +127,30 @@ class City(database.Base):
 
         return result
 
-    def to_dict(self):
-        return {
+    def to_dict(self, language='en'):
+        result = {
             "province": {
                 "code": self.province,
-                "nameEn": self.province_full_name("en"),
-                "nameFr": self.province_full_name("fr"),
+                "name": self.province_full_name(language),
             },
-            "nameEn": self.name_en,
-            "nameFr": self.name_fr,
-            "id": self.id
+            # "nameEn": self.name_en,
+            # "nameFr": self.name_fr,
+            "id": self.id,
+            "station": {
+                # "nameEn": self.station.name_en,
+                # "nameFr": self.station.name_fr,
+            }
         }
+
+        if language == 'en':
+            result["name"] = self.name_en
+            result["station"]["name"] = self.station.name_en
+        else:
+            result["name"] = self.name_fr
+            result["station"]["name"] = self.station.name_fr
+        print(result)
+
+        return result
 
     def __repr__(self):
         return (

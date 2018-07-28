@@ -9,10 +9,11 @@ from flask_cors import CORS
 app = Flask(__name__)
 cache = RedisCache()
 debug = app.debug
+search_cache_duration = 5 * 60
 
 if debug:
     CORS(app)
-
+    search_cache_duration = 1
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
@@ -34,7 +35,7 @@ def from_coordinates():
     city = utils.find_nearest_city_from_location(lat=latitude, lon=longitude)
 
     if city:
-        forecast = city.current_condition(language=language)
+        forecast = city.current_condition(language=language, caching=app.debug)
         forecast["city"] = city.to_dict()
 
         return jsonify(forecast)
@@ -63,9 +64,11 @@ def from_city(city_code):
 @app.route("/api/forecast/search/<search>")
 def search_city(search):
     language = request.args.get("lang", "en")
+    if language not in ["en", "fr"]:
+        language = "en"
 
     search = models.remove_accents(search)
-    print(search)
+    print(search, language)
     cache_key = f"search_city.{search}"
     cached = cache.get(cache_key)
 
@@ -81,7 +84,7 @@ def search_city(search):
             .order_by(models.City.name_en_unaccented)
             .limit(5)
         )
-        results = [c.to_dict() for c in search_results]
-        cache.set(cache_key, results, 5 * 60)
+        results = [c.to_dict(language) for c in search_results]
+        cache.set(cache_key, results, search_cache_duration)
 
     return jsonify(results)
