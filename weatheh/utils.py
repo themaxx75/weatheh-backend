@@ -155,7 +155,7 @@ def find_nearest(lat, lon, results):
 
 
 def find_nearest_city_from_location(
-    lat, lon, radius=1.5, caching=False
+    lat, lon, radius=1.5, caching=True
 ):
     """
     Finds a list of stations based on a given lat lon, and finds the nearest
@@ -181,7 +181,7 @@ def find_nearest_city_from_location(
     city = find_nearest(lat, lon, station.cities)
 
     if caching:
-        api.cache.set(cache_key, city, 60 * 60)
+        api.cache.set(cache_key, city, 2 * 60)
     return city
 
 

@@ -2,7 +2,6 @@ from flask import abort, Flask, jsonify, request, make_response
 from werkzeug.contrib.cache import RedisCache
 from sqlalchemy.orm.exc import NoResultFound
 from . import database, models, utils
-import requests
 
 from flask_cors import CORS
 
@@ -64,10 +63,25 @@ def from_city(city_code):
 @app.route("/api/forecast/search/<search>")
 def search_city(search):
     language = request.args.get("lang", "en")
-    results = (
-        models.City.query.filter(models.City.name_en_unaccented.ilike("{}%".format(search)))
-        .order_by(models.City.name_en_unaccented)
-        .limit(5)
-    )
 
-    return jsonify([c.to_dict() for c in results])
+    search = models.remove_accents(search)
+    print(search)
+    cache_key = f"search_city.{search}"
+    cached = cache.get(cache_key)
+
+    if cached:
+        if app.debug:
+            print('Cached')
+        results = cached
+    else:
+        search_results = (
+            models.City.query.filter(
+                models.City.name_en_unaccented.ilike("{}%".format(search))
+            )
+            .order_by(models.City.name_en_unaccented)
+            .limit(5)
+        )
+        results = [c.to_dict() for c in search_results]
+        cache.set(cache_key, results, 5 * 60)
+
+    return jsonify(results)
