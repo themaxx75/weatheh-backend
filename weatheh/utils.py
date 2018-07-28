@@ -3,7 +3,7 @@ import math
 
 import lxml.etree as etree
 import pytz
-import requests
+# import requests
 import json
 import os
 
@@ -45,7 +45,7 @@ def get_current_conditions(station_obj, city_obj=None, language="en"):
         city = station_obj.cities[0]
 
     url = WEATHER_URL.format(city.province, city.code, language[0])
-    r = requests.get(url)
+    r = api.session.get(url)
     root = etree.fromstring(r.content)
     conditions = root.find("currentConditions/condition").text
     temperature = root.find("currentConditions/temperature").text
@@ -90,7 +90,7 @@ def get_current_conditions(station_obj, city_obj=None, language="en"):
 
 def _current_conditions(city, language="en"):
     url = WEATHER_URL.format(city.province, city.code, language[0])
-    r = requests.get(url)
+    r = api.session.get(url)
     root = etree.fromstring(r.content)
 
     conditions = root.find("currentConditions/condition").text
@@ -133,7 +133,7 @@ def _current_conditions(city, language="en"):
 
 def current_conditions(city, language="en"):
     url = WEATHER_URL.format(city.province, city.code, language[0])
-    r = requests.get(url)
+    r = api.session.get(url)
     if not r.ok:
         return {}
     return forecast_xml_parser(r.content)

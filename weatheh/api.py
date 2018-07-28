@@ -3,6 +3,8 @@ from werkzeug.contrib.cache import RedisCache
 from sqlalchemy.orm.exc import NoResultFound
 from . import database, models, utils
 
+import requests
+
 from flask_cors import CORS
 
 
@@ -10,6 +12,8 @@ app = Flask(__name__)
 cache = RedisCache()
 debug = app.debug
 search_cache_duration = 5 * 60
+session = requests.Session()
+
 
 if debug:
     CORS(app)
