@@ -49,6 +49,8 @@ def from_coordinates():
 def from_city(city_code):
     error_response = {"error": "Invalid city code provided"}
     language = request.args.get("lang", "en")
+    if language not in ["en", "fr"]:
+        language = "en"
 
     try:
         city = models.City.query.filter(models.City.id == city_code).one()
@@ -56,7 +58,7 @@ def from_city(city_code):
         return make_response(jsonify(error_response), 400)
 
     forecast = city.current_condition(language=language)
-    forecast["city"] = city.to_dict()
+    forecast["city"] = city.to_dict(language=language)
 
     return jsonify(forecast)
 
