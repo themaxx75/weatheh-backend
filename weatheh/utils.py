@@ -198,7 +198,7 @@ def forecast_xml_parser(raw_xml):
                 child.find("timeStamp").text, timestamp_format
             ).replace(tzinfo=pytz.UTC)
         else:
-            utc_offset = int(child.get("UTCOffset"))
+            utc_offset = float(child.get("UTCOffset"))
 
     if observation_datetime_utc:
         observation_datetime_utc = observation_datetime_utc.astimezone(

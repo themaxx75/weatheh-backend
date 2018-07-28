@@ -68,15 +68,18 @@ def search_city(search):
         language = "en"
 
     search = models.remove_accents(search)
-    print(search, language)
-    cache_key = f"search_city.{search}"
+    if len(search) < 2:
+        return jsonify([])
+
+    cache_key = f"search_city.{language}.{search}"
     cached = cache.get(cache_key)
 
     if cached:
         if app.debug:
             print('Cached')
-        results = cached
-    else:
+            return jsonify(cached)
+
+    if language == 'en':
         search_results = (
             models.City.query.filter(
                 models.City.name_en_unaccented.ilike("{}%".format(search))
@@ -84,7 +87,16 @@ def search_city(search):
             .order_by(models.City.name_en_unaccented)
             .limit(5)
         )
-        results = [c.to_dict(language) for c in search_results]
-        cache.set(cache_key, results, search_cache_duration)
+    else:
+        search_results = (
+            models.City.query.filter(
+                models.City.name_en_unaccented.ilike("{}%".format(search))
+            )
+            .order_by(models.City.name_fr_unaccented)
+            .limit(5)
+        )
+
+    results = [c.to_dict(language) for c in search_results]
+    cache.set(cache_key, results, search_cache_duration)
 
     return jsonify(results)

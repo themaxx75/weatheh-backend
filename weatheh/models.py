@@ -128,18 +128,15 @@ class City(database.Base):
         return result
 
     def to_dict(self, language='en'):
+        condition = self.current_condition(language)
         result = {
             "province": {
                 "code": self.province,
                 "name": self.province_full_name(language),
             },
-            # "nameEn": self.name_en,
-            # "nameFr": self.name_fr,
             "id": self.id,
-            "station": {
-                # "nameEn": self.station.name_en,
-                # "nameFr": self.station.name_fr,
-            }
+            "station": {},
+            "condition": condition.get("current")
         }
 
         if language == 'en':
@@ -148,7 +145,6 @@ class City(database.Base):
         else:
             result["name"] = self.name_fr
             result["station"]["name"] = self.station.name_fr
-        print(result)
 
         return result
 
