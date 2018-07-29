@@ -3,7 +3,7 @@ import unicodedata
 import sqlalchemy as sa
 from sqlalchemy import orm
 
-from . import database, utils, api
+from . import database, utils, app
 
 
 class Station(database.Base):
@@ -115,7 +115,7 @@ class City(database.Base):
         cache_key = f"City.{self.id}.{language}"
 
         if caching:
-            cached = api.cache.get(cache_key)
+            cached = app.cache.get(cache_key)
 
             if cached:
                 return cached
@@ -123,7 +123,7 @@ class City(database.Base):
         result = utils.current_conditions(self, language)
 
         if caching:
-            api.cache.set(cache_key, result, 120)
+            app.cache.set(cache_key, result, 120)
 
         return result
 

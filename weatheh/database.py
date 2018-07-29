@@ -9,7 +9,9 @@ DB_FILE = os.path.join(os.path.dirname(__file__), "../{}".format(DB_NAME))
 
 engine = create_engine("sqlite:///{}".format(DB_FILE), convert_unicode=True)
 db_session = scoped_session(
-    sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    sessionmaker(
+        autocommit=False, autoflush=False, expire_on_commit=False, bind=engine
+    )
 )
 
 Base = declarative_base()

@@ -19,6 +19,7 @@ if debug:
     CORS(app)
     search_cache_duration = 1
 
+
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     database.db_session.remove()

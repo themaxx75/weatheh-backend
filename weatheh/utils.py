@@ -3,11 +3,10 @@ import math
 
 import lxml.etree as etree
 import pytz
-# import requests
 import json
 import os
 
-from . import api, models
+from . import app, models
 
 BASE_HOST_DD_WEATHER = "http://dd.weather.gc.ca"
 WEATHER_URL = BASE_HOST_DD_WEATHER + "/citypage_weather/xml/{}/{}_{}.xml"
@@ -45,7 +44,7 @@ def get_current_conditions(station_obj, city_obj=None, language="en"):
         city = station_obj.cities[0]
 
     url = WEATHER_URL.format(city.province, city.code, language[0])
-    r = api.session.get(url)
+    r = app.session.get(url)
     root = etree.fromstring(r.content)
     conditions = root.find("currentConditions/condition").text
     temperature = root.find("currentConditions/temperature").text
@@ -90,7 +89,7 @@ def get_current_conditions(station_obj, city_obj=None, language="en"):
 
 def _current_conditions(city, language="en"):
     url = WEATHER_URL.format(city.province, city.code, language[0])
-    r = api.session.get(url)
+    r = app.session.get(url)
     root = etree.fromstring(r.content)
 
     conditions = root.find("currentConditions/condition").text
@@ -133,7 +132,7 @@ def _current_conditions(city, language="en"):
 
 def current_conditions(city, language="en"):
     url = WEATHER_URL.format(city.province, city.code, language[0])
-    r = api.session.get(url)
+    r = app.session.get(url)
     if not r.ok:
         return {}
     return forecast_xml_parser(r.content)
@@ -166,7 +165,7 @@ def find_nearest_city_from_location(
     cache_key = f"nearest_city_from_location.{lat}{lon}"
 
     if caching:
-        cached = api.cache.get(cache_key)
+        cached = app.cache.get(cache_key)
         if cached:
             return cached
 
@@ -183,7 +182,7 @@ def find_nearest_city_from_location(
     city = find_nearest(lat, lon, station.cities)
 
     if caching:
-        api.cache.set(cache_key, city, 2 * 60)
+        app.cache.set(cache_key, city, 2 * 60)
     return city
 
 
