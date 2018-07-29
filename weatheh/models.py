@@ -3,7 +3,7 @@ import unicodedata
 import sqlalchemy as sa
 from sqlalchemy import orm
 
-from . import database, utils, app
+from . import app, database, utils
 
 
 class Station(database.Base):

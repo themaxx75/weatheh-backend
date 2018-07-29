@@ -1,8 +1,10 @@
 requests
 sqlalchemy
 pytz
-flask
+falcon
 lxml
 redis
 gunicorn
-flask-cors
+falcon-cors
+ujson
+werkzeug

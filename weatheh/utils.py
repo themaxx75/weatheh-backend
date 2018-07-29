@@ -1,10 +1,10 @@
 import datetime
+import json
 import math
+import os
 
 import lxml.etree as etree
 import pytz
-import json
-import os
 
 from . import app, models
 
@@ -155,9 +155,7 @@ def find_nearest(lat, lon, results):
     return near[1]
 
 
-def find_nearest_city_from_location(
-    lat, lon, radius=1.5, caching=False
-):
+def find_nearest_city_from_location(lat, lon, radius=1.5, caching=False):
     """
     Finds a list of stations based on a given lat lon, and finds the nearest
     city served by the found station.
@@ -169,6 +167,7 @@ def find_nearest_city_from_location(
         if cached:
             return cached
 
+    # noinspection PyUnresolvedReferences
     stations = models.Station.query.filter(
         models.Station.latitude >= lat - radius,
         models.Station.latitude <= lat + radius,
@@ -236,9 +235,7 @@ def forecast_xml_parser(raw_xml):
         root.find("currentConditions/temperature"), "text", None
     )
     parsed["current"]["temperatureFloat"] = to_float(current_temperature)
-    parsed["current"]["temperature"] = to_float(
-        current_temperature, rounding=0
-    )
+    parsed["current"]["temperature"] = to_float(current_temperature, rounding=0)
 
     current_description = getattr(
         root.find("currentConditions/condition"), "text", None
@@ -353,6 +350,7 @@ def forecast_xml_parser(raw_xml):
 
         parsed["foreCast"].append(forecast_dict)
 
+    # noinspection PyDictCreation
     current_forecast = {**parsed["current"]}
     current_forecast["cloudPrecipitation"] = current_forecast["description"]
     current_forecast["forecastPeriod"] = "Now"
