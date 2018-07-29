@@ -120,7 +120,9 @@ class City(database.Base):
             if cached:
                 return cached
 
-        result = utils.current_conditions(self, language)
+        result = utils.current_conditions(
+            self.province, self.code, language
+        )
 
         if caching:
             app.cache.set(cache_key, result, 120)

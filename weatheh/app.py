@@ -104,7 +104,7 @@ class GeoLocation:
             )
             if city:
                 forecast = city.current_condition(
-                    language=language, caching=True
+                    language=language, caching=False
                 )
                 forecast["city"] = city.to_dict()
                 resp.body = json.dumps(forecast)

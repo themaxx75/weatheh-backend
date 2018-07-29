@@ -130,8 +130,8 @@ def _current_conditions(city, language="en"):
     return result
 
 
-def current_conditions(city, language="en"):
-    url = WEATHER_URL.format(city.province, city.code, language[0])
+def current_conditions(province, code, language="en"):
+    url = WEATHER_URL.format(province, code, language[0])
     r = app.session.get(url)
     if not r.ok:
         return {}
@@ -156,7 +156,7 @@ def find_nearest(lat, lon, results):
 
 
 def find_nearest_city_from_location(
-    lat, lon, radius=1.5, caching=True
+    lat, lon, radius=1.5, caching=False
 ):
     """
     Finds a list of stations based on a given lat lon, and finds the nearest
