@@ -335,3 +335,5 @@ temp
 
 # For debuging
 script_*.py
+.vscode/
+playing.py
