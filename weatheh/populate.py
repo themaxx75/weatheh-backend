@@ -189,7 +189,7 @@ def populate_stations_and_cities():
         [
             ("searchIndexEn", pymongo.TEXT),
             ("searchIndexFr", pymongo.TEXT),
-            # ("stationCode", pymongo.TEXT),
+            ("code", pymongo.TEXT),
         ]
     )
     app.cities_coll.create_index([("loc", pymongo.GEO2D)])
@@ -198,6 +198,10 @@ def populate_stations_and_cities():
 
 
 def init_mongodb():
+    """
+    In a path when weatheh is:
+    python -c  "from weatheh import populate; populate.init_mongodb()"
+    """
     app.client.drop_database(app.MONGO_DB_NAME)
     app.client.fsync()
 
