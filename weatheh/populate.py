@@ -3,6 +3,7 @@ import datetime
 import os
 import shutil
 import time
+import sys
 import zipfile
 
 import lxml.etree as etree
@@ -444,4 +445,5 @@ if __name__ == '__main__':
             datetime.datetime.utcnow(),
             datetime.timedelta(seconds=time.time() - start)
         )
+        sys.stdout.flush()
         time.sleep(5 * 60)
