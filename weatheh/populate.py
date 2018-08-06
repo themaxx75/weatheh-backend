@@ -1,12 +1,15 @@
 import csv
+import datetime
 import os
 import shutil
+import time
 import zipfile
 
 import lxml.etree as etree
 import pymongo
 
 from weatheh import app, utils
+from bson import ObjectId
 
 
 SITE_LIST_EN_URL = (
@@ -106,8 +109,8 @@ def populate_stations_and_cities():
             "provinceFr": PROVINCES[province]["fr"],
             "nameEn": name_en,
             "nameFr": name_fr,
-            "parentNameEn": None,
-            "parentNameFr": None,
+            "parentNameEn": name_en,
+            "parentNameFr": name_fr,
             "loc": clean_location(lat, lon),
         }
 
@@ -129,7 +132,10 @@ def populate_stations_and_cities():
         station_doc = app.stations_coll.find_one(
             {"stationCode": station_code.lower()}
         )
-        if not station_doc:
+        if station_doc:
+            station_id = station_doc["_id"]
+        else:
+            station_id = ObjectId()
             _station_doc = _stations.find_one(
                 {"stationCode": station_code.lower()}
             )
@@ -167,6 +173,7 @@ def populate_stations_and_cities():
                 )
 
         city["stationCode"] = station_code
+        city["stationId"] = station_id
 
         city["stationEn"] = root_en.find("currentConditions/station").text
         city["stationFr"] = root_fr.find("currentConditions/station").text
@@ -182,7 +189,7 @@ def populate_stations_and_cities():
         [
             ("searchIndexEn", pymongo.TEXT),
             ("searchIndexFr", pymongo.TEXT),
-            ("stationCode", pymongo.TEXT),
+            # ("stationCode", pymongo.TEXT),
         ]
     )
     app.cities_coll.create_index([("loc", pymongo.GEO2D)])
@@ -192,9 +199,18 @@ def populate_stations_and_cities():
 
 def init_mongodb():
     app.client.drop_database(app.MONGO_DB_NAME)
+    app.client.fsync()
+
     get_raw_station_list()
+    app.client.fsync()
+
     populate_stations_and_cities()
+    app.client.fsync()
+
     add_more_cities()
+    app.client.fsync()
+
+    utils.populate_forecast()
 
 
 def download_file(folder_name, url, unzip=True, clean_target=True):
@@ -387,10 +403,9 @@ def add_more_cities(download=False):
         if not station:
             print("No station in province", city)
             continue
-
         parent = cities.find_one(
             {
-                "stationCode": station["stationCode"],
+                "stationId": station["_id"],
                 "authoritative": True,
                 "province": city["province"],
                 "loc": {"$near": city["loc"]},
@@ -415,3 +430,14 @@ def add_more_cities(download=False):
         print("ADDING TO MONGODB", city)
 
     cities.insert_many(inserts)
+
+
+if __name__ == '__main__':
+    while True:
+        start = time.time()
+        utils.populate_forecast()
+        print(
+            datetime.datetime.utcnow(),
+            datetime.timedelta(seconds=time.time() - start)
+        )
+        time.sleep(5 * 60)

@@ -20,9 +20,9 @@ client = pymongo.MongoClient()
 db = client[MONGO_DB_NAME]
 stations_coll = db.stations
 cities_coll = db.cities
-db.drop_collection("forecasts")
-forecasts_coll = db.forecasts
-db.forecasts.create_index("datetime", expireAfterSeconds=120)
+# db.drop_collection("forecasts")
+# forecasts_coll = db.forecasts
+# db.forecasts.create_index("datetime", expireAfterSeconds=120)
 
 
 # noinspection PyMethodMayBeStatic
@@ -33,9 +33,7 @@ class City:
         try:
             city = cities_coll.find_one({"_id": ObjectId(city_code)})
             if city:
-                city["weather"] = utils.fetch_forecast(
-                    city, language, hourly=False
-                )
+                city["weather"] = city["weather"][language]
                 resp.body = json.dumps(utils.normalize_city(city, language))
                 resp.status = falcon.HTTP_200
             else:
@@ -69,42 +67,35 @@ class Search:
             tracker = []
 
             for city in cursor.limit(5):
-                results_docs.append(city)
                 tracker.append(city["_id"])
+                city["weather"] = city["weather"][language]
+                results_docs.append(utils.normalize_city(city, language))
 
             if len(results_docs) < 5:
                 for c in cities_coll.find(
                     {"$text": {"$search": utils.normalize_string(clean_search)}}
                 ):
                     if len(results_docs) < 5 and c["_id"] not in tracker:
-                        results_docs.append(c)
                         tracker.append(c["_id"])
+                        c["weather"] = c["weather"][language]
+                        results_docs.append(utils.normalize_city(c, language))
+
                     if len(results_docs) == 5:
                         break
 
-            results = []
-
-            for result in results_docs:
-                result["weather"] = utils.fetch_forecast(
-                    result, language, hourly=False, fore_cast=False
-                )
-                results.append(utils.normalize_city(result, language))
-
-            resp.body = json.dumps(results)
+            resp.body = json.dumps(results_docs)
 
 
 # noinspection PyUnresolvedReferences,PyMethodMayBeStatic
 class GeoLocation:
     def on_get(self, req, resp):
-        language = process_language(req)
+        language = utils.process_language(req)
         try:
             latitude = float(req.params.get("lat"))
             longitude = float(req.params.get("lon"))
             city = utils.find_nearest_from_loc([latitude, longitude])
             if city:
-                city["weather"] = utils.fetch_forecast(
-                    city, language, hourly=False
-                )
+                city["weather"] = city["weather"][language]
                 resp.body = json.dumps(utils.normalize_city(city, language))
                 resp.status = falcon.HTTP_200
             else:

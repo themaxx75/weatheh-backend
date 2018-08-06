@@ -337,3 +337,4 @@ temp
 script_*.py
 .vscode/
 playing.py
+*.pyc
